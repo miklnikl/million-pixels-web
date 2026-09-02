@@ -1,7 +1,7 @@
 "use client";
 
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PixelBlock } from "@/app/types";
 import { PixelBlockFormModal } from "@/components/pixel-block-form-modal";
 import { PixelBlockPopover } from "@/components/pixel-block-popover";
@@ -56,6 +56,21 @@ export function PixelCanvas({ blocks: initialBlocks }: PixelCanvasProps) {
     hoveredPixel,
     hoveredBlock,
   });
+
+  useEffect(() => {
+    function handleDocumentClick(event: MouseEvent) {
+      const target = event.target;
+
+      if (target instanceof Node && !canvasRef.current?.contains(target)) {
+        dragStartRef.current = null;
+        setSelection(null);
+        setSelectedBlock(null);
+      }
+    }
+
+    document.addEventListener("click", handleDocumentClick);
+    return () => document.removeEventListener("click", handleDocumentClick);
+  }, []);
 
   function findBlock(point: Point) {
     return findBlockAtPoint(blocks, point);
@@ -165,6 +180,7 @@ export function PixelCanvas({ blocks: initialBlocks }: PixelCanvasProps) {
             setEditingBlock(selectedBlock);
           }
         }}
+        onClearSelection={clearSelection}
       />
 
       <div ref={viewportRef} className="relative min-h-0 flex-1">

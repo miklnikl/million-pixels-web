@@ -7,6 +7,7 @@ type PixelBlockPopoverProps = {
 };
 
 export function PixelBlockPopover({ block, style }: PixelBlockPopoverProps) {
+  if (!block.content) return null;
   return (
     <aside
       className="pointer-events-none absolute z-10 w-64 border border-zinc-300 bg-white p-3 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-950"

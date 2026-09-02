@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import type { PixelBlock } from "@/app/types";
+import { PixelColorEditor } from "@/components/pixel-color-editor";
 
 type Area = {
   x: number;
@@ -17,9 +18,16 @@ type PixelBlockFormModalProps = {
   onSaved: (block: PixelBlock) => void;
 };
 
-function getInputColor(block?: PixelBlock) {
-  const color = block?.colors?.[0];
-  return color && /^#[0-9a-f]{6}$/i.test(color) ? color : "#000000";
+function getInitialColors(area: Area, block?: PixelBlock) {
+  const colors = Array(area.width * area.height).fill("#000000");
+
+  for (let index = 0; index < colors.length; index += 1) {
+    if (block?.colors?.[index]) {
+      colors[index] = block.colors[index];
+    }
+  }
+
+  return colors;
 }
 
 export function PixelBlockFormModal({
@@ -28,8 +36,7 @@ export function PixelBlockFormModal({
   onClose,
   onSaved,
 }: PixelBlockFormModalProps) {
-  const [color, setColor] = useState(() => getInputColor(block));
-  const [hasChangedColor, setHasChangedColor] = useState(false);
+  const [colors, setColors] = useState(() => getInitialColors(area, block));
   const [content, setContent] = useState(block?.content ?? "");
   const [contentType, setContentType] = useState<"IMAGE" | "TEXT">(
     block?.contentType ?? "TEXT",
@@ -52,10 +59,7 @@ export function PixelBlockFormModal({
             ...area,
             contentType,
             content: content || undefined,
-            colors:
-              block && !hasChangedColor
-                ? (block.colors ?? [])
-                : Array(area.width * area.height).fill(color),
+            colors,
           }),
         },
       );
@@ -81,9 +85,14 @@ export function PixelBlockFormModal({
       aria-modal="true"
       aria-labelledby="pixel-block-form-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <form
-        className="w-full max-w-md border border-zinc-300 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-950"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto border border-zinc-300 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-950"
         onSubmit={handleSubmit}
       >
         <h2 id="pixel-block-form-title" className="text-lg font-semibold">
@@ -91,18 +100,12 @@ export function PixelBlockFormModal({
         </h2>
 
         <div className="mt-5 flex flex-col gap-4">
-          <label className="flex flex-col gap-2 text-sm">
-            Color
-            <input
-              type="color"
-              value={color}
-              onChange={(event) => {
-                setColor(event.target.value);
-                setHasChangedColor(true);
-              }}
-              className="h-10 w-full border border-zinc-300 dark:border-zinc-700"
-            />
-          </label>
+          <PixelColorEditor
+            width={area.width}
+            height={area.height}
+            colors={colors}
+            onChange={setColors}
+          />
 
           <label className="flex flex-col gap-2 text-sm">
             Content

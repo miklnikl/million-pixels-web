@@ -11,6 +11,7 @@ type PixelPriceWidgetProps = {
   selectedEmptyArea: Area | null;
   onBuy: () => void;
   onEdit: () => void;
+  onClearSelection: () => void;
 };
 
 const TOTAL_PIXELS = 1_000_000;
@@ -54,12 +55,16 @@ export function PixelPriceWidget({
   selectedEmptyArea,
   onBuy,
   onEdit,
+  onClearSelection,
 }: PixelPriceWidgetProps) {
   const safeSoldPixels = Math.min(soldPixels, TOTAL_PIXELS);
   const progress = (safeSoldPixels / TOTAL_PIXELS) * 100;
 
   return (
-    <section className="h-24 shrink-0 border border-zinc-300 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950">
+    <section
+      className="h-24 shrink-0 border border-zinc-300 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950"
+      onClick={onClearSelection}
+    >
       {selectedBlock ? (
         <SelectionDetails
           label="Block"
@@ -68,7 +73,10 @@ export function PixelPriceWidget({
             <button
               type="button"
               className="bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-white dark:text-zinc-900"
-              onClick={onEdit}
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit();
+              }}
             >
               Edit
             </button>
@@ -82,7 +90,10 @@ export function PixelPriceWidget({
             <button
               type="button"
               className="bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-white dark:text-zinc-900"
-              onClick={onBuy}
+              onClick={(event) => {
+                event.stopPropagation();
+                onBuy();
+              }}
             >
               Buy this block
             </button>
