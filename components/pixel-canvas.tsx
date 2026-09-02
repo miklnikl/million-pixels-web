@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import type { PixelBlock } from "@/app/types";
+import { PixelBlockFormModal } from "@/components/pixel-block-form-modal";
 import { PixelBlockPopover } from "@/components/pixel-block-popover";
 import { PixelPriceWidget } from "@/components/pixel-price-widget";
 
@@ -175,14 +176,19 @@ function getBlockView(
   };
 }
 
-export function PixelCanvas({ blocks }: PixelCanvasProps) {
+export function PixelCanvas({ blocks: initialBlocks }: PixelCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [blocks, setBlocks] = useState(initialBlocks);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [zoom, setZoom] = useState(MIN_ZOOM);
   const [offset, setOffset] = useState<Point>({ x: 0, y: 0 });
   const [selection, setSelection] = useState<Selection | null>(null);
   const [selectedBlock, setSelectedBlock] = useState<PixelBlock | null>(null);
+  const [purchaseArea, setPurchaseArea] = useState<ReturnType<
+    typeof getSelectionBounds
+  > | null>(null);
+  const [editingBlock, setEditingBlock] = useState<PixelBlock | null>(null);
   const [hoveredPosition, setHoveredPosition] = useState<Point | null>(null);
   const dragStartRef = useRef<Point | null>(null);
   const touchGestureRef = useRef<TouchGesture | null>(null);
@@ -722,6 +728,16 @@ export function PixelCanvas({ blocks }: PixelCanvasProps) {
         soldPixels={soldPixels}
         selectedBlock={selectedBlock}
         selectedEmptyArea={selectedEmptyArea}
+        onBuy={() => {
+          if (selectedEmptyArea) {
+            setPurchaseArea(selectedEmptyArea);
+          }
+        }}
+        onEdit={() => {
+          if (selectedBlock) {
+            setEditingBlock(selectedBlock);
+          }
+        }}
       />
 
       <div ref={viewportRef} className="relative min-h-0 flex-1">
@@ -748,6 +764,35 @@ export function PixelCanvas({ blocks }: PixelCanvasProps) {
           />
         )}
       </div>
+
+      {purchaseArea && (
+        <PixelBlockFormModal
+          area={purchaseArea}
+          onClose={() => setPurchaseArea(null)}
+          onSaved={(block) => {
+            setBlocks((currentBlocks) => [...currentBlocks, block]);
+            setPurchaseArea(null);
+            setSelection(null);
+          }}
+        />
+      )}
+
+      {editingBlock && (
+        <PixelBlockFormModal
+          area={editingBlock}
+          block={editingBlock}
+          onClose={() => setEditingBlock(null)}
+          onSaved={(block) => {
+            setBlocks((currentBlocks) =>
+              currentBlocks.map((currentBlock) =>
+                currentBlock.id === block.id ? block : currentBlock,
+              ),
+            );
+            setEditingBlock(null);
+            setSelectedBlock(block);
+          }}
+        />
+      )}
     </section>
   );
 }

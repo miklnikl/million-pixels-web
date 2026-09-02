@@ -9,6 +9,8 @@ type PixelPriceWidgetProps = {
   soldPixels: number;
   selectedBlock: PixelBlock | null;
   selectedEmptyArea: Area | null;
+  onBuy: () => void;
+  onEdit: () => void;
 };
 
 const TOTAL_PIXELS = 1_000_000;
@@ -17,7 +19,15 @@ function formatPrice(pixels: number) {
   return `$${pixels.toLocaleString("en-US")}`;
 }
 
-function SelectionDetails({ label, area }: { label: string; area: Area }) {
+function SelectionDetails({
+  label,
+  area,
+  action,
+}: {
+  label: string;
+  area: Area;
+  action?: React.ReactNode;
+}) {
   const pixels = area.width * area.height;
 
   return (
@@ -28,9 +38,12 @@ function SelectionDetails({ label, area }: { label: string; area: Area }) {
           {area.width} × {area.height} px
         </p>
       </div>
-      <p className="text-2xl font-semibold tabular-nums">
-        {formatPrice(pixels)}
-      </p>
+      <div className="flex items-center gap-4">
+        <p className="text-2xl font-semibold tabular-nums">
+          {formatPrice(pixels)}
+        </p>
+        {action}
+      </div>
     </div>
   );
 }
@@ -39,6 +52,8 @@ export function PixelPriceWidget({
   soldPixels,
   selectedBlock,
   selectedEmptyArea,
+  onBuy,
+  onEdit,
 }: PixelPriceWidgetProps) {
   const safeSoldPixels = Math.min(soldPixels, TOTAL_PIXELS);
   const progress = (safeSoldPixels / TOTAL_PIXELS) * 100;
@@ -46,9 +61,33 @@ export function PixelPriceWidget({
   return (
     <section className="h-24 shrink-0 border border-zinc-300 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-950">
       {selectedBlock ? (
-        <SelectionDetails label="Block" area={selectedBlock} />
+        <SelectionDetails
+          label="Block"
+          area={selectedBlock}
+          action={
+            <button
+              type="button"
+              className="bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-white dark:text-zinc-900"
+              onClick={onEdit}
+            >
+              Edit
+            </button>
+          }
+        />
       ) : selectedEmptyArea ? (
-        <SelectionDetails label="Selection" area={selectedEmptyArea} />
+        <SelectionDetails
+          label="Selection"
+          area={selectedEmptyArea}
+          action={
+            <button
+              type="button"
+              className="bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-white dark:text-zinc-900"
+              onClick={onBuy}
+            >
+              Buy this block
+            </button>
+          }
+        />
       ) : (
         <div className="flex h-full flex-col justify-center">
           <div className="flex items-center justify-between gap-4 text-sm">
