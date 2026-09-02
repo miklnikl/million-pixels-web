@@ -4,6 +4,7 @@ export type PixelBlock = {
   y: number;
   width: number;
   height: number;
+  colors?: string[];
   contentType?: "IMAGE" | "TEXT";
   content?: string;
   createdAt: string;

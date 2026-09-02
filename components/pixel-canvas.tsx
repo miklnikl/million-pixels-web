@@ -469,13 +469,38 @@ export function PixelCanvas({ blocks }: PixelCanvasProps) {
     );
 
     for (const block of blocks) {
-      context.fillStyle = block.contentType === "IMAGE" ? "#2563eb" : "#f59e0b";
+      const fallbackColor =
+        block.contentType === "IMAGE" ? "#2563eb" : "#f59e0b";
+      context.fillStyle = fallbackColor;
       context.fillRect(
         offset.x + block.x * scale,
         offset.y + block.y * scale,
         block.width * scale,
         block.height * scale,
       );
+
+      const colorCount = Math.min(
+        block.colors?.length ?? 0,
+        block.width * block.height,
+      );
+
+      for (let index = 0; index < colorCount; index += 1) {
+        const color = block.colors?.[index];
+
+        if (!color || !CSS.supports("color", color)) {
+          continue;
+        }
+
+        const pixelX = index % block.width;
+        const pixelY = Math.floor(index / block.width);
+        context.fillStyle = color;
+        context.fillRect(
+          offset.x + (block.x + pixelX) * scale,
+          offset.y + (block.y + pixelY) * scale,
+          scale,
+          scale,
+        );
+      }
     }
 
     if (hoveredPixel) {
