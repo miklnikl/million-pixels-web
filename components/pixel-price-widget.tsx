@@ -9,6 +9,9 @@ type PixelPriceWidgetProps = {
   soldPixels: number;
   selectedBlock: PixelBlock | null;
   selectedEmptyArea: Area | null;
+  canEdit: boolean;
+  isAdmin: boolean;
+  isAuthLoading: boolean;
   onBuy: () => void;
   onEdit: () => void;
   onClearSelection: () => void;
@@ -53,6 +56,9 @@ export function PixelPriceWidget({
   soldPixels,
   selectedBlock,
   selectedEmptyArea,
+  canEdit,
+  isAdmin,
+  isAuthLoading,
   onBuy,
   onEdit,
   onClearSelection,
@@ -70,16 +76,19 @@ export function PixelPriceWidget({
           label="Block"
           area={selectedBlock}
           action={
-            <button
-              type="button"
-              className="bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-white dark:text-zinc-900"
-              onClick={(event) => {
-                event.stopPropagation();
-                onEdit();
-              }}
-            >
-              Edit
-            </button>
+            canEdit && (
+              <button
+                type="button"
+                disabled={isAuthLoading}
+                className="bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-white dark:text-zinc-900"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEdit();
+                }}
+              >
+                Edit
+              </button>
+            )
           }
         />
       ) : selectedEmptyArea ? (
@@ -89,13 +98,14 @@ export function PixelPriceWidget({
           action={
             <button
               type="button"
+              disabled={isAuthLoading}
               className="bg-zinc-900 px-4 py-2 text-sm text-white dark:bg-white dark:text-zinc-900"
               onClick={(event) => {
                 event.stopPropagation();
                 onBuy();
               }}
             >
-              Buy this block
+              {isAdmin ? "Add block" : "Buy this block"}
             </button>
           }
         />

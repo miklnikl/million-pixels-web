@@ -6,6 +6,7 @@ import type { PixelBlock } from "@/app/types";
 import { PixelBlockFormModal } from "@/components/pixel-block-form-modal";
 import { PixelBlockPopover } from "@/components/pixel-block-popover";
 import { PixelPriceWidget } from "@/components/pixel-price-widget";
+import { useAuth } from "@/components/auth-provider";
 import {
   areasOverlap,
   findBlockAtPoint,
@@ -18,6 +19,8 @@ import { useCanvasCamera } from "./use-canvas-camera";
 import { useCanvasRenderer } from "./use-canvas-renderer";
 
 export function PixelCanvas({ blocks: initialBlocks }: PixelCanvasProps) {
+  const { user, isLoading, openAuth } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<Point | null>(null);
@@ -170,13 +173,21 @@ export function PixelCanvas({ blocks: initialBlocks }: PixelCanvasProps) {
         soldPixels={soldPixels}
         selectedBlock={selectedBlock}
         selectedEmptyArea={selectedEmptyArea}
+        canEdit={!!user && (isAdmin || selectedBlock?.userId === user.id)}
+        isAdmin={isAdmin}
+        isAuthLoading={isLoading}
         onBuy={() => {
           if (selectedEmptyArea) {
             setPurchaseArea(selectedEmptyArea);
+            if (!user) openAuth();
           }
         }}
         onEdit={() => {
-          if (selectedBlock) {
+          if (
+            selectedBlock &&
+            user &&
+            (isAdmin || selectedBlock.userId === user.id)
+          ) {
             setEditingBlock(selectedBlock);
           }
         }}
@@ -209,7 +220,7 @@ export function PixelCanvas({ blocks: initialBlocks }: PixelCanvasProps) {
         )}
       </div>
 
-      {purchaseArea && (
+      {purchaseArea && user && (
         <PixelBlockFormModal
           area={purchaseArea}
           onClose={() => setPurchaseArea(null)}
@@ -221,11 +232,18 @@ export function PixelCanvas({ blocks: initialBlocks }: PixelCanvasProps) {
         />
       )}
 
-      {editingBlock && (
+      {editingBlock && user && (isAdmin || editingBlock.userId === user.id) && (
         <PixelBlockFormModal
           area={editingBlock}
           block={editingBlock}
           onClose={() => setEditingBlock(null)}
+          onDeleted={(id) => {
+            setBlocks((currentBlocks) =>
+              currentBlocks.filter((block) => block.id !== id),
+            );
+            setEditingBlock(null);
+            clearSelection();
+          }}
           onSaved={(block) => {
             setBlocks((currentBlocks) =>
               currentBlocks.map((currentBlock) =>

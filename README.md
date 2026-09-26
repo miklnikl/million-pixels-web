@@ -20,6 +20,41 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Authentication
+
+Set `NEXT_PUBLIC_API_URL` to the backend URL. Browser authentication and block
+mutations use the local `/api` routes, which forward the session cookie to the
+backend. Field reads remain public.
+
+Before running the updated backend, apply its migrations and regenerate the client
+from `../million-pixels-api`:
+
+```bash
+npm run prisma:migrate:deploy
+npm run prisma:generate
+```
+
+Registration signs the user in immediately. Sessions last seven days and use an
+HttpOnly, SameSite=Lax cookie (Secure when the API runs in production, requiring
+HTTPS). Signing out revokes the session in the database. Only signed-in users can
+create blocks; their owners and administrators can edit or delete them. Existing
+blocks without an owner remain visible and can be managed by administrators.
+
+New accounts have the `USER` role. To promote an existing account, run these
+commands in `../million-pixels-api` against the intended database:
+
+```bash
+npm run prisma:migrate:deploy
+npm run build
+npm run admin:promote -- user@example.com
+```
+
+Replace the email with the registered account's exact email and refresh the
+website. Administrators can select an empty area to add a block, or select any
+existing block to edit or delete it. In the block form, enter a registered user's
+email to assign ownership. Leave it empty to keep an existing owner or assign a
+new block to yourself. Public registration cannot assign administrator roles.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
